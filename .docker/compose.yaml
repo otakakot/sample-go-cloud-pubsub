@@ -1,0 +1,25 @@
+services:
+  pubsub:
+    container_name: ${APP_NAME}-pubsub
+    image: asia.gcr.io/google.com/cloudsdktool/cloud-sdk:emulators
+    command: gcloud beta emulators pubsub start --quiet --project=local-project --host-port=0.0.0.0:8086
+    restart: always
+    ports:
+      - 8086:8086
+  subscriber:
+    container_name: ${APP_NAME}-subscriber
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - workdir=cmd/subscriber
+    environment:
+      PUBSUB_EMULATOR_HOST: pubsub:8086
+      GOOGLE_PROJECT_ID: local-project
+      PUBSUB_TOPIC_ID: local-topic
+      PUBSUB_SUBSCRIPTION_ID: local-subscription
+    volumes:
+      - ../:/app
+    restart: always
+    depends_on:
+      - pubsub
